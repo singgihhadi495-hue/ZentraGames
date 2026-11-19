@@ -1,0 +1,16 @@
+name: ZentraMinigames
+version: 1.0.0
+main: id.zentra.minigames.ZentraMinigames
+api-version: '1.21'
+author: Zentra
+description: Kumpulan minigame dengan arena melayang yang dibangun otomatis.
+softdepend: [Multiverse-Core, LuckPerms]
+commands:
+  zm:
+    description: Menu Zentra Minigames
+    aliases: [minigames, zminigames]
+    usage: /zm [join|leave|list|rules]
+permissions:
+  zentra.minigames.admin:
+    description: Perintah admin Zentra Minigames
+    default: op
