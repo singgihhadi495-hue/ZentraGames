@@ -1,0 +1,36 @@
+# ===== Zentra Minigames =====
+# Nama world tempat semua arena dibangun (world Multiverse kamu)
+world: pvp
+
+# Titik awal pembangunan arena. Dibuat sangat jauh dari spawn supaya tidak lag.
+# Tiap jenis game digeser 400 block di sumbu X, tiap instance 400 block di sumbu Z.
+arena:
+  x: 30000
+  z: 30000
+  y: 150
+
+# Naikkan angka ini kalau mau memaksa semua arena dibangun ulang saat server start.
+build-version: 1
+
+build:
+  blocks-per-tick: 4000
+
+# Detik hitung mundur sebelum game mulai (setelah pemain minimum terpenuhi)
+countdown: 20
+
+# Command yang boleh dipakai pemain saat sedang di dalam game
+allowed-commands: [zm, minigames, zminigames, msg, tell, r, w, reply]
+
+# Hadiah untuk pemenang. Pakai %player% untuk nama pemenang. Contoh: "eco give %player% 500"
+rewards:
+  win: []
+
+# instances = jumlah arena paralel per game
+games:
+  sumo:      { enabled: true, instances: 2 }
+  tnttag:    { enabled: true, instances: 2 }
+  crumble:   { enabled: true, instances: 2 }
+  colorrush: { enabled: true, instances: 2 }
+  pillars:   { enabled: true, instances: 2 }
+  tinyhunt:  { enabled: true, instances: 1 }
+  duel:      { enabled: true, instances: 3 }
