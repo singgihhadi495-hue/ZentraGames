@@ -1,0 +1,102 @@
+package id.zentra.minigames;
+
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class MinigamesCommand implements CommandExecutor, TabCompleter {
+    private final ZentraMinigames plugin;
+    private final GameManager mgr;
+
+    public MinigamesCommand(ZentraMinigames plugin, GameManager mgr) {
+        this.plugin = plugin;
+        this.mgr = mgr;
+    }
+
+    private boolean admin(CommandSender s) { return s.hasPermission("zentra.minigames.admin"); }
+
+    @Override
+    public boolean onCommand(CommandSender s, Command c, String label, String[] a) {
+        Player pl = s instanceof Player pp ? pp : null;
+        if (a.length == 0) {
+            if (pl != null) mgr.openMenu(pl);
+            else s.sendMessage("Perintah ini untuk pemain.");
+            return true;
+        }
+        String sub = a[0].toLowerCase();
+        switch (sub) {
+            case "join" -> {
+                if (pl == null) return true;
+                if (a.length < 2) mgr.openMenu(pl);
+                else mgr.join(pl, a[1].toLowerCase());
+            }
+            case "leave" -> {
+                if (pl == null) return true;
+                if (mgr.leave(pl)) Msg.send(pl, "&7Kamu keluar dari game.");
+                else Msg.send(pl, "&cKamu tidak sedang berada di game.");
+            }
+            case "list" -> {
+                s.sendMessage(Msg.c(Msg.PREFIX + "&bDaftar game:"));
+                for (String k : mgr.keys()) {
+                    for (Game g : mgr.list(k)) {
+                        s.sendMessage(Msg.c("&8 \u2022 &f" + g.id() + " &8- &e" + g.state + " &8(&a" + g.players.size() + "&8/" + g.max + ")"
+                                + (g.open ? "" : " &c[ditutup]")));
+                    }
+                }
+            }
+            case "rules" -> {
+                if (a.length < 2 || mgr.list(a[1].toLowerCase()) == null) { s.sendMessage(Msg.c(Msg.PREFIX + "&cPakai: /zm rules <game>")); return true; }
+                Game g = mgr.list(a[1].toLowerCase()).get(0);
+                s.sendMessage(Msg.c(Msg.PREFIX + "&b" + g.name + " &7- Aturan:"));
+                for (String r : g.rules) s.sendMessage(Msg.c("&8 \u2022 &f" + r));
+            }
+            case "build", "forcestart", "open", "close", "reload" -> {
+                if (!admin(s)) { s.sendMessage(Msg.c(Msg.PREFIX + "&cKamu tidak punya izin.")); return true; }
+                adminCmd(s, pl, sub, a);
+            }
+            default -> s.sendMessage(Msg.c(Msg.PREFIX + "&cPerintah tidak dikenal. /zm"));
+        }
+        return true;
+    }
+
+    private void adminCmd(CommandSender s, Player pl, String sub, String[] a) {
+        switch (sub) {
+            case "reload" -> { plugin.reloadConfig(); s.sendMessage(Msg.c(Msg.PREFIX + "&aConfig dimuat ulang.")); }
+            case "forcestart" -> {
+                Game g = pl == null ? null : mgr.of(pl);
+                if (g == null) s.sendMessage(Msg.c(Msg.PREFIX + "&cMasuk dulu ke sebuah game."));
+                else { g.forceStart(); s.sendMessage(Msg.c(Msg.PREFIX + "&aGame dipaksa mulai.")); }
+            }
+            case "build" -> {
+                if (a.length < 2) { s.sendMessage(Msg.c(Msg.PREFIX + "&cPakai: /zm build <game|all>")); return; }
+                mgr.rebuild(a[1].toLowerCase());
+                s.sendMessage(Msg.c(Msg.PREFIX + "&aArena masuk antrean pembangunan (arena yang sedang dipakai dilewati)."));
+            }
+            default -> {
+                if (a.length < 2 || mgr.list(a[1].toLowerCase()) == null) { s.sendMessage(Msg.c(Msg.PREFIX + "&cPakai: /zm " + sub + " <game>")); return; }
+                mgr.setOpen(a[1].toLowerCase(), sub.equals("open"));
+                s.sendMessage(Msg.c(Msg.PREFIX + "&a" + a[1] + (sub.equals("open") ? " dibuka." : " ditutup.")));
+            }
+        }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a) {
+        List<String> out = new ArrayList<>();
+        if (a.length == 1) {
+            out.addAll(List.of("join", "leave", "list", "rules"));
+            if (admin(s)) out.addAll(List.of("build", "forcestart", "open", "close", "reload"));
+        } else if (a.length == 2) {
+            out.addAll(mgr.keys());
+            if (a[0].equalsIgnoreCase("build")) out.add("all");
+        }
+        String last = a[a.length - 1].toLowerCase();
+        out.removeIf(x -> !x.startsWith(last));
+        return out;
+    }
+}
